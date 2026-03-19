@@ -191,6 +191,8 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
       },
       tooltip: {
         backgroundColor: styles.getPropertyValue('--tooltip-bg').trim(),
+        titleColor: styles.getPropertyValue('--tooltip-title').trim(),
+        bodyColor: styles.getPropertyValue('--tooltip-body').trim(),
         callbacks: {
           title: (items: any[]) =>
             items.length ? filteredData[items[0].dataIndex]?.place ?? '' : '',
