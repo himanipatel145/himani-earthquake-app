@@ -133,3 +133,15 @@ Each component combines all three patterns: it receives data and handlers via **
 - **Light / Dark mode** — A toggle button in the header switches between light and dark themes. All UI components (chart colours, table, cards, pagination, form controls) adapt via CSS custom properties.
 - **Responsive layout** — Bootstrap grid (`col-md-6`) provides side-by-side panels on desktop and vertically stacked panels on mobile, with appropriate scroll behaviour.
 - **Loading spinner** — Bootstrap `<Spinner>` component shown while data is being fetched from the USGS API.
+
+## Use of AI Tools
+
+AI tools were used to:
+
+- Debug issues related to React and Chart.js integration
+- Get suggestions for improving component structure and interactivity
+- Generate ideas for interactivity features (table ↔ chart sync)
+- Assist with CSS and Bootstrap styling for better UI and responsiveness
+- Refine documentation and README formatting
+
+All code was reviewed and modified to ensure understanding and correctness.
