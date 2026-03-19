@@ -1,0 +1,255 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Component styles — supports light & dark themes via CSS variables
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── MainLayout ────────────────────────────────────────────────────── */
+
+/* Desktop (>= 768px): side-by-side panels locked to viewport height */
+.main-layout {
+  height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+.main-layout__row {
+  height: 100%;
+}
+
+.main-layout__panel {
+  height: 100%;
+}
+
+/* Mobile (< 768px): panels stack vertically and the page scrolls */
+@media (max-width: 767.98px) {
+  .main-layout {
+    height: auto;
+    overflow: visible;
+  }
+
+  .main-layout__row {
+    height: auto;
+  }
+
+  .main-layout__panel {
+    height: auto;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Cards — overflow hidden so content is constrained within the card.
+   Internal scrolling is handled by .data-table-scroll inside. */
+.main-layout__card {
+  overflow: hidden;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+[data-bs-theme="dark"] .main-layout__card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25) !important;
+}
+
+.main-layout__card .card-title {
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+/* Card body needs to be a flex column that doesn't exceed card bounds */
+.main-layout__card > .card-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Table wrapper — flex column holding scrollable table + pinned pagination */
+.main-layout__table-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* On mobile give the table wrapper a fixed max-height so it scrolls */
+@media (max-width: 767.98px) {
+  .main-layout__table-wrapper {
+    max-height: 60vh;
+  }
+}
+
+/* ── Loading spinner container ─────────────────────────────────────── */
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+/* ── ChartPanel ────────────────────────────────────────────────────── */
+
+.chart-panel__chart-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The canvas container — takes ALL remaining height after the dropdowns */
+.chart-panel__canvas {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+}
+
+@media (max-width: 767.98px) {
+  .chart-panel__canvas {
+    min-height: 350px;
+  }
+}
+
+/* ── DataTable ─────────────────────────────────────────────────────── */
+
+.data-table {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  border-collapse: collapse !important;
+}
+
+/* Smaller font on very small screens */
+@media (max-width: 575.98px) {
+  .data-table {
+    font-size: 0.7rem;
+  }
+}
+
+/* Sticky header row — uses theme variable for background */
+.data-table__head th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--table-head-bg) !important;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent-purple) !important;
+  white-space: nowrap;
+}
+
+/* ── Row highlight colours (allocation-page style green) ──────────── */
+/* Applied to td cells because box-shadow on <tr> is unreliable.
+   First td gets a thick green left border to match the allocation page.
+   Transitions prevent flickering when hover state changes rapidly. */
+
+/* Base transition on table cells — smooth highlight fade in/out */
+.data-table td {
+  transition: background-color 0.15s ease;
+}
+
+/* Only first-child gets the accent border (reserve space with transparent) */
+.data-table td:first-child {
+  border-left: 4px solid transparent;
+  transition: background-color 0.15s ease, border-left-color 0.15s ease;
+}
+
+/* Remove ALL cell borders inside highlighted rows so the green background
+   appears as one seamless block with zero gaps between cells. */
+.data-table__row--selected > td,
+.data-table__row--clicked > td {
+  border-color: transparent !important;
+}
+
+/* Re-apply just the first-child left accent on highlighted rows */
+.data-table__row--selected > td:first-child {
+  border-left: 4px solid #22c55e !important;
+}
+.data-table__row--clicked > td:first-child {
+  border-left: 4px solid #16a34a !important;
+}
+
+/* Hovered row (from chart hover or table mouse-enter) */
+.data-table__row--selected > td {
+  background-color: #dcfce7 !important;
+}
+
+[data-bs-theme="dark"] .data-table__row--selected > td {
+  background-color: #166534 !important;
+}
+
+/* Clicked row (from chart click or table click) */
+.data-table__row--clicked > td {
+  background-color: #bbf7d0 !important;
+}
+
+[data-bs-theme="dark"] .data-table__row--clicked > td {
+  background-color: #14532d !important;
+}
+
+/* Both clicked AND hovered */
+.data-table__row--clicked.data-table__row--selected > td {
+  background-color: #86efac !important;
+}
+
+[data-bs-theme="dark"] .data-table__row--clicked.data-table__row--selected > td {
+  background-color: #15803d !important;
+}
+
+/* ── Scrollable table body — scrolls independently, pagination stays pinned ── */
+
+.data-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* ── Pagination footer — pinned at bottom of the table card ────────── */
+
+.data-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+/* Pagination buttons — adapt to theme */
+.data-table__pagination .page-link {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+  font-size: 0.78rem;
+}
+
+.data-table__pagination .page-item.active .page-link {
+  background-color: var(--accent-purple) !important;
+  border-color: var(--accent-purple) !important;
+  color: #fff !important;
+}
+
+.data-table__pagination .page-link:hover {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.data-table__pagination .page-item.disabled .page-link {
+  opacity: 0.4;
+}
+
+/* On mobile stack the pagination and count vertically */
+@media (max-width: 575.98px) {
+  .data-table__footer {
+    justify-content: center;
+  }
+}

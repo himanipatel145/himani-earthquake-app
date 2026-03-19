@@ -1,0 +1,102 @@
+/* ── Light theme (default) ──────────────────────────────────────────── */
+
+:root,
+[data-bs-theme="light"] {
+  --bg-primary: #f1f5f9; /* slate-100 */
+  --bg-secondary: #e2e8f0; /* slate-200 */
+  --bg-card: #ffffff;
+  --text-primary: #1e293b; /* slate-800 */
+  --text-muted: #64748b; /* slate-500 */
+  --accent-purple: #7c3aed; /* violet-600 */
+  --accent-cyan: #0891b2; /* cyan-600 */
+  --accent-orange: #ea580c; /* orange-600 */
+  --border-subtle: rgba(148, 163, 184, 0.35);
+  --table-head-bg: #f8fafc; /* slate-50 */
+  --chart-label: rgba(30, 41, 59, 0.8);
+  --chart-tick: rgba(71, 85, 105, 0.7);
+  --chart-grid: rgba(148, 163, 184, 0.25);
+  --tooltip-bg: rgba(255, 255, 255, 0.95);
+  --tooltip-title: #7c3aed;
+  --tooltip-body: #334155;
+  --tooltip-border: rgba(148, 163, 184, 0.4);
+  --legend-color: rgba(30, 41, 59, 0.75);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.45);
+  --scrollbar-hover: rgba(100, 116, 139, 0.6);
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────── */
+
+[data-bs-theme="dark"] {
+  --bg-primary: #0f172a; /* deep navy */
+  --bg-secondary: #1e293b; /* slate-800 */
+  --bg-card: #1e293b;
+  --text-primary: #e2e8f0; /* slate-200 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --accent-purple: #a78bfa; /* violet-400 */
+  --accent-cyan: #22d3ee; /* cyan-400 */
+  --accent-orange: #fb923c; /* orange-400 */
+  --border-subtle: rgba(71, 85, 105, 0.4);
+  --table-head-bg: #0f172a;
+  --chart-label: rgba(148, 163, 184, 0.8);
+  --chart-tick: rgba(148, 163, 184, 0.6);
+  --chart-grid: rgba(71, 85, 105, 0.3);
+  --tooltip-bg: rgba(30, 41, 59, 0.95);
+  --tooltip-title: #a78bfa;
+  --tooltip-body: #cbd5e1;
+  --tooltip-border: rgba(100, 116, 139, 0.4);
+  --legend-color: rgba(203, 213, 225, 0.85);
+  --scrollbar-thumb: rgba(100, 116, 139, 0.5);
+  --scrollbar-hover: rgba(100, 116, 139, 0.7);
+}
+
+/* ── Body ──────────────────────────────────────────────────────────── */
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+/* ── Custom scrollbar (WebKit) ─────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* ── Bootstrap form-control overrides (both themes) ────────────────── */
+
+.form-select,
+.form-control {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: var(--accent-purple) !important;
+  box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.2) !important;
+}

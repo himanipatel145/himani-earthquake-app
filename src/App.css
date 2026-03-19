@@ -1,0 +1,56 @@
+/* ── Gradient header bar ────────────────────────────────────────────── */
+
+.app-header {
+  background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+  padding: 1rem 2rem;
+}
+
+.app-header__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.app-header__title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.app-header__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 400;
+}
+
+/* Theme toggle button in the header */
+.app-header__toggle {
+  white-space: nowrap;
+  font-weight: 600;
+  border-width: 2px;
+}
+
+/* Responsive header — smaller padding & text on mobile */
+@media (max-width: 575.98px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .app-header__title {
+    font-size: 1.1rem;
+  }
+
+  .app-header__subtitle {
+    font-size: 0.7rem;
+  }
+
+  .app-header__toggle {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
