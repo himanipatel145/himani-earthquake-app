@@ -96,6 +96,13 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
   }, []);
 
   const palette = useMemo(() => buildPalette(pointColor, isDark), [pointColor, isDark]);
+  const DEFAULT_BG = palette.defaultBg;
+  const DEFAULT_BORDER = palette.defaultBorder;
+  const DIMMED_BG = palette.dimmedBg;
+  const DIMMED_BORDER = palette.dimmedBorder;
+
+  // Ref to the Chart.js instance (for programmatic tooltip display)
+  const chartRef = useRef<ChartJS<'scatter'>>(null);
 
   const lastHoveredIndex = useRef<number | null>(null);
 
@@ -122,6 +129,17 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
   const chartData = useMemo(() => {
     const hasSelection = activeFilteredIndex !== -1;
 
+    const backgroundColors = filteredData.map((_, i) =>
+      hasSelection ? (i === activeFilteredIndex ? SELECTED_BG : DIMMED_BG) : DEFAULT_BG,
+    );
+    const borderColors = filteredData.map((_, i) =>
+      hasSelection ? (i === activeFilteredIndex ? SELECTED_BORDER : DIMMED_BORDER) : DEFAULT_BORDER,
+    );
+    // Selected point is enlarged to 10 px; others shrink to 3 px when a selection exists
+    const radii = filteredData.map((_, i) =>
+      hasSelection ? (i === activeFilteredIndex ? 10 : 3) : 4,
+    );
+
     return {
       datasets: [
         {
@@ -130,28 +148,23 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
             x: Number(eq[xKey]),
             y: Number(eq[yKey]),
           })),
-          backgroundColor: filteredData.map((_, i) =>
-            hasSelection ? (i === activeFilteredIndex ? SELECTED_BG : palette.dimmedBg) : palette.defaultBg
-          ),
-          borderColor: filteredData.map((_, i) =>
-            hasSelection ? (i === activeFilteredIndex ? SELECTED_BORDER : palette.dimmedBorder) : palette.defaultBorder
-          ),
-          pointRadius: filteredData.map((_, i) =>
-            hasSelection ? (i === activeFilteredIndex ? 10 : 3) : 4
-          ),
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          pointRadius: radii,
           borderWidth: filteredData.map((_, i) =>
-            hasSelection && i === activeFilteredIndex ? 2 : 1
+            hasSelection && i === activeFilteredIndex ? 2 : 1,
           ),
         },
       ],
     };
-  }, [filteredData, xKey, yKey, xAxis, yAxis, activeFilteredIndex, palette]);
+  }, [filteredData, xKey, yKey, xAxis, yAxis, activeFilteredIndex, pointColor, isDark]);
 
   // Click → update Redux selection
   const handleChartClick = useCallback(
     (_event: ChartEvent, elements: ActiveElement[]) => {
       if (elements.length > 0) {
-        const quake = filteredData[elements[0].index];
+        const idx = elements[0].index;
+        const quake = filteredData[idx];
         onSelectQuake(quake?.id === selectedId ? null : quake?.id ?? null);
       } else {
         onSelectQuake(null);
@@ -177,8 +190,41 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
     [filteredData, handleHoverQuake],
   );
 
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    if (activeFilteredIndex !== -1) {
+      const meta = chart.getDatasetMeta(0);
+      const point = meta.data[activeFilteredIndex];
+      if (point) {
+        chart.tooltip?.setActiveElements(
+          [{ datasetIndex: 0, index: activeFilteredIndex }],
+          { x: point.x, y: point.y },
+        );
+        chart.setActiveElements([{ datasetIndex: 0, index: activeFilteredIndex }]);
+        chart.update('none');
+      }
+    } else {
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      chart.setActiveElements([]);
+      chart.update('none');
+    }
+  }, [activeFilteredIndex]);
+
+  /* -- Chart.js options — colours adapt to the active theme ------------ */
+
   // Theme-based styles
   const styles = getComputedStyle(document.documentElement);
+  const labelColor = styles.getPropertyValue('--chart-label').trim();
+  const tickColor = styles.getPropertyValue('--chart-tick').trim();
+  const gridColor = styles.getPropertyValue('--chart-grid').trim();
+  const tooltipBg = styles.getPropertyValue('--tooltip-bg').trim();
+  const tooltipTitle = styles.getPropertyValue('--tooltip-title').trim();
+  const tooltipBody = styles.getPropertyValue('--tooltip-body').trim();
+  const tooltipBorder = styles.getPropertyValue('--tooltip-border').trim();
+  const legendColor = styles.getPropertyValue('--legend-color').trim();
 
   const options = {
     responsive: true,
@@ -187,26 +233,55 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
     onHover: handleChartHover,
     plugins: {
       legend: {
-        labels: { color: styles.getPropertyValue('--legend-color').trim() },
+        display: true,
+        labels: { color: legendColor },
       },
       tooltip: {
-        backgroundColor: styles.getPropertyValue('--tooltip-bg').trim(),
-        titleColor: styles.getPropertyValue('--tooltip-title').trim(),
-        bodyColor: styles.getPropertyValue('--tooltip-body').trim(),
+        backgroundColor: tooltipBg,
+        titleColor: tooltipTitle,
+        bodyColor: tooltipBody,
+        borderColor: tooltipBorder,
+        borderWidth: 1,
         callbacks: {
-          title: (items: any[]) =>
-            items.length ? filteredData[items[0].dataIndex]?.place ?? '' : '',
-          label: (ctx: any) =>
-            `${xAxis}: ${ctx.parsed.x}, ${yAxis}: ${ctx.parsed.y}`,
+          title: (items: any[]) => {
+            if (!items.length) return '';
+            const eq = filteredData[items[0].dataIndex];
+            return eq?.place ?? '';
+          },
+          label: (ctx: any) => {
+            const eq = filteredData[ctx.dataIndex];
+            if (!eq) return `${xAxis}: ${ctx.parsed.x}, ${yAxis}: ${ctx.parsed.y}`;
+            const lines = [
+              `Magnitude: ${eq.mag} ${eq.magType}`,
+              `Depth: ${eq.depth} km`,
+              `Lat: ${eq.latitude}, Lng: ${eq.longitude}`,
+              `Time: ${new Date(eq.time).toLocaleString()}`,
+              `Status: ${eq.status}`,
+              `Type: ${eq.type}`,
+            ];
+            if (eq.rms != null) lines.push(`RMS: ${eq.rms}`);
+            if (eq.gap != null) lines.push(`Gap: ${eq.gap}°`);
+            if (eq.dmin != null) lines.push(`Dmin: ${eq.dmin}`);
+            if (eq.nst != null) lines.push(`NST: ${eq.nst}`);
+            if (eq.magNst != null) lines.push(`Mag NST: ${eq.magNst}`);
+            if (eq.magError != null) lines.push(`Mag Error: \u00b1${eq.magError}`);
+            if (eq.depthError != null) lines.push(`Depth Error: \u00b1${eq.depthError} km`);
+            if (eq.horizontalError != null) lines.push(`Horiz Error: \u00b1${eq.horizontalError} km`);
+            return lines;
+          },
         },
       },
     },
     scales: {
       x: {
-        title: { display: true, text: xAxis },
+        title: { display: true, text: xAxis, color: labelColor },
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
       },
       y: {
-        title: { display: true, text: yAxis },
+        title: { display: true, text: yAxis, color: labelColor },
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
       },
     },
   };
@@ -216,33 +291,42 @@ function ChartPanel({ data, selectedId, onSelectQuake }: ChartPanelProps) {
       {/* Controls */}
       <div className="row mb-3 align-items-end">
         <div className="col">
-          <Form.Select value={xAxis} onChange={(e) => setXAxis(e.target.value)}>
-            {variables.map((v) => (
-              <option key={v}>{v}</option>
-            ))}
-          </Form.Select>
+          <Form.Group controlId="xAxisSelect">
+            <Form.Label><strong>X-Axis:</strong></Form.Label>
+            <Form.Select value={xAxis} onChange={(e) => setXAxis(e.target.value)}>
+              {variables.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </div>
-
         <div className="col">
-          <Form.Select value={yAxis} onChange={(e) => setYAxis(e.target.value)}>
-            {variables.map((v) => (
-              <option key={v}>{v}</option>
-            ))}
-          </Form.Select>
+          <Form.Group controlId="yAxisSelect">
+            <Form.Label><strong>Y-Axis:</strong></Form.Label>
+            <Form.Select value={yAxis} onChange={(e) => setYAxis(e.target.value)}>
+              {variables.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </div>
-
         <div className="col-auto">
-          <Form.Control
-            type="color"
-            value={pointColor}
-            onChange={(e) => setPointColor(e.target.value)}
-          />
+          <Form.Group controlId="pointColorPicker">
+            <Form.Label><strong>Color:</strong></Form.Label>
+            <Form.Control
+              type="color"
+              value={pointColor}
+              onChange={(e) => setPointColor(e.target.value)}
+              title="Pick point colour"
+              style={{ width: 40, height: 38, padding: 2, cursor: 'pointer' }}
+            />
+          </Form.Group>
         </div>
       </div>
 
       {/* Chart */}
       <div className="chart-panel__canvas">
-        <Scatter data={chartData} options={options} />
+        <Scatter ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
   );
